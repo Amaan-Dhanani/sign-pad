@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { signature } from 'svelte-signature-pad';
-    import { enhance } from '$app/forms';
+	import { enhance } from '$app/forms';
 
 	let { form } = $props();
 
@@ -13,11 +13,13 @@
 	let name = $state('');
 	let strokes = $state<Stroke[]>([]);
 	let preview = $state('');
+	let submitted = $state(false);
+	let submitting = $state(false);
 
 	let width = $state(600);
 	let height = $state(360);
 
-	let pathInput: HTMLInputElement;
+	let pathInput = $state<HTMLInputElement>();
 
 	const ondraw = (path: string) => {
 		preview = path;
@@ -36,7 +38,6 @@
 		];
 
 		preview = '';
-
 		updateHiddenInput();
 	};
 
@@ -49,6 +50,17 @@
 	const clear = () => {
 		strokes = [];
 		preview = '';
+
+		if (pathInput) {
+			pathInput.value = '';
+		}
+	};
+
+	const newSignature = () => {
+		name = '';
+		strokes = [];
+		preview = '';
+		submitted = false;
 
 		if (pathInput) {
 			pathInput.value = '';
@@ -73,31 +85,69 @@
 	};
 </script>
 
-<form method="POST" class="w-full max-w-2xl" use:enhance>
-	<!-- Name + Actions -->
+<form
+	method="POST"
+	class="w-full max-w-2xl"
+	use:enhance={() => {
+		submitting = true;
+
+		return async ({ update }) => {
+			await update();
+
+			submitting = false;
+
+			// Only hide the signature pad when the server
+			// confirms the signature was saved.
+			if (form?.success) {
+				submitted = true;
+			}
+		};
+	}}
+>
+	<!-- Header / actions -->
 	<div class="mb-4 flex w-full items-end gap-2">
-		<div class="min-w-0 flex-1">
-			<label for="name" class="mb-1 block text-sm font-medium text-gray-700"> Name </label>
+		{#if submitted}
+			<div class="flex min-w-0 flex-1 items-center">
+				<p class="text-sm font-medium text-green-600">
+					Signature saved successfully.
+				</p>
+			</div>
 
-			<input
-				id="name"
-				name="name"
-				type="text"
-				bind:value={name}
-				required
-				placeholder="Enter signature name"
-				class="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-			/>
-		</div>
+			<button
+				type="button"
+				onclick={newSignature}
+				class="shrink-0 rounded bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+			>
+				New signature
+			</button>
+		{:else}
+			<div class="min-w-0 flex-1">
+				<label
+					for="name"
+					class="mb-1 block text-sm font-medium text-gray-700"
+				>
+					Name
+				</label>
 
-		<!-- Submit -->
-		<button
-			type="submit"
-			disabled={!strokes.length || !name.trim()}
-			class="shrink-0 rounded bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-		>
-			Submit
-		</button>
+				<input
+					id="name"
+					name="name"
+					type="text"
+					bind:value={name}
+					required
+					placeholder="Enter signature name"
+					class="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+				/>
+			</div>
+
+			<button
+				type="submit"
+				disabled={submitting || !strokes.length || !name.trim()}
+				class="shrink-0 rounded bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				{submitting ? 'Saving...' : 'Submit'}
+			</button>
+		{/if}
 
 		<!-- Data -->
 		<a
@@ -134,62 +184,73 @@
 		</button>
 	</div>
 
-	<!-- Hidden strokes input -->
-	<input bind:this={pathInput} type="hidden" name="path" />
-
-	<!-- Signature pad -->
-	<div class="relative h-[360px] w-full border border-dashed border-gray-300 bg-gray-100">
-		<div class="pointer-events-none absolute bottom-24 left-4 right-4 border-t border-dotted border-gray-300"></div>
-
-		<div
-			role="application"
-			class="relative h-full w-full touch-none"
-			use:signature={signatureOptions}
-			bind:clientWidth={width}
-			bind:clientHeight={height}
-			ontouchmove={(event) => event.preventDefault()}
-		>
-			<!-- Existing strokes -->
-			{#each strokes as stroke}
-				<svg
-					class="pointer-events-none absolute inset-0 h-full w-full"
-					viewBox={`0 0 ${stroke.width} ${stroke.height}`}
-					preserveAspectRatio="none"
-				>
-					<path d={stroke.path} fill="black" />
-				</svg>
-			{/each}
-
-			<!-- Current stroke -->
-			{#if preview}
-				<svg
-					class="pointer-events-none absolute inset-0 h-full w-full"
-					viewBox={`0 0 ${width} ${height}`}
-					preserveAspectRatio="none"
-				>
-					<path d={preview} fill="black" />
-				</svg>
-			{/if}
-		</div>
-
-		<!-- Clear -->
-		<button
-			type="button"
-			class="absolute right-2 top-2 z-10 rounded border border-gray-200 bg-white px-4 py-2 text-sm text-gray-500 hover:bg-gray-50"
-			onclick={clear}
-		>
-			Clear
-		</button>
-	</div>
-
-	<!-- Messages -->
+	<!-- Server error -->
 	{#if form?.error}
-		<p class="mt-3 text-sm text-red-600">
+		<p class="mb-3 text-sm text-red-600">
 			{form.error}
 		</p>
 	{/if}
 
-	{#if form?.success}
-		<p class="mt-3 text-sm text-green-600">Signature saved successfully.</p>
+	<!-- Signature pad -->
+	{#if !submitted}
+		<input
+			bind:this={pathInput}
+			type="hidden"
+			name="path"
+		/>
+
+		<div
+			class="relative h-[360px] w-full border border-dashed border-gray-300 bg-gray-100"
+		>
+			<div
+				class="pointer-events-none absolute bottom-24 left-4 right-4 border-t border-dotted border-gray-300"
+			></div>
+
+			<div
+				role="application"
+				class="relative h-full w-full touch-none"
+				use:signature={signatureOptions}
+				bind:clientWidth={width}
+				bind:clientHeight={height}
+				ontouchmove={(event) => event.preventDefault()}
+			>
+				<!-- Existing strokes -->
+				{#each strokes as stroke}
+					<svg
+						class="pointer-events-none absolute inset-0 h-full w-full"
+						viewBox={`0 0 ${stroke.width} ${stroke.height}`}
+						preserveAspectRatio="none"
+					>
+						<path
+							d={stroke.path}
+							fill="black"
+						/>
+					</svg>
+				{/each}
+
+				<!-- Current stroke -->
+				{#if preview}
+					<svg
+						class="pointer-events-none absolute inset-0 h-full w-full"
+						viewBox={`0 0 ${width} ${height}`}
+						preserveAspectRatio="none"
+					>
+						<path
+							d={preview}
+							fill="black"
+						/>
+					</svg>
+				{/if}
+			</div>
+
+			<!-- Clear -->
+			<button
+				type="button"
+				onclick={clear}
+				class="absolute right-2 top-2 z-10 rounded border border-gray-200 bg-white px-4 py-2 text-sm text-gray-500 hover:bg-gray-50"
+			>
+				Clear
+			</button>
+		</div>
 	{/if}
 </form>
