@@ -12,9 +12,7 @@ export const actions: Actions = {
 	default: async ({ request }) => {
 		try {
 			const formData = await request.formData();
-
 			const name = String(formData.get('name') || '').trim();
-
 			const path = String(formData.get('path') || '').trim();
 
 			if (!name) {

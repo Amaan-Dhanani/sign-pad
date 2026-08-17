@@ -93,23 +93,15 @@
 			}
 
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
 			const sourceWidth = img.naturalWidth || 600;
-
 			const sourceHeight = img.naturalHeight || 360;
-
 			const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
-
 			const width = sourceWidth * scale;
-
 			const height = sourceHeight * scale;
-
 			const x = (canvas.width - width) / 2;
-
 			const y = (canvas.height - height) / 2;
-
 			ctx.drawImage(img, x, y, width, height);
-
+            
 			return canvas.toDataURL('image/png');
 		} finally {
 			URL.revokeObjectURL(url);

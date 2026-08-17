@@ -28,9 +28,7 @@ export const actions: Actions = {
 	default: async ({ request }) => {
 		try {
 			const formData = await request.formData();
-
 			const action = String(formData.get('action') || '');
-
 			const _id = String(formData.get('_id') || '');
 
 			if (action !== 'delete') {
