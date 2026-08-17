@@ -1,7 +1,3 @@
-<style>
-	@import 'tailwindcss';
-</style>
-
 <script lang="ts">
 	import { signature } from 'svelte-signature-pad';
 

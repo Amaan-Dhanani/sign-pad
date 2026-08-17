@@ -1,7 +1,3 @@
-<style>
-	@import 'tailwindcss';
-</style>
-
 <script lang="ts">
 	import { onMount } from 'svelte';
 
