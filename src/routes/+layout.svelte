@@ -1,48 +1,41 @@
 <script lang="ts">
+	import 'tailwindcss';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
-    
+
 	let needsLandscape = $state(false);
 
+	function updateOrientation() {
+		needsLandscape = window.innerHeight > window.innerWidth;
+	}
+
 	async function goFullscreen() {
-		// Must happen from a user gesture.
 		try {
 			if (!document.fullscreenElement) {
-				const el = document.documentElement;
-
-				if (el.requestFullscreen) {
-					await el.requestFullscreen();
-				}
+				await document.documentElement.requestFullscreen();
 			}
 		} catch (err) {
 			console.warn('Fullscreen unavailable:', err);
 		}
 
-		// Try locking the orientation AFTER fullscreen.
 		try {
 			if (screen.orientation?.lock) {
 				await screen.orientation.lock('landscape');
 			}
 		} catch (err) {
-			// Expected on browsers that don't support orientation locking.
 			console.warn('Orientation lock unavailable:', err);
 		}
 
 		updateOrientation();
 	}
 
-	function updateOrientation() {
-		needsLandscape = window.innerHeight > window.innerWidth;
-	}
-
 	function handleFullscreenChange() {
-		let isFullscreen = !!document.fullscreenElement;
-
-		// Try orientation lock again after fullscreen changes.
 		if (document.fullscreenElement) {
 			screen.orientation?.lock?.('landscape').catch(() => {});
 		}
+
+		updateOrientation();
 	}
 
 	onMount(() => {
@@ -54,40 +47,34 @@
 
 		return () => {
 			document.removeEventListener('fullscreenchange', handleFullscreenChange);
-
 			window.removeEventListener('resize', updateOrientation);
-
 			screen.orientation?.removeEventListener?.('change', updateOrientation);
 		};
 	});
 </script>
 
-<!-- Landscape warning / fallback -->
 {#if needsLandscape}
 	<div
-		class="fixed inset-0 z-[9999] flex flex-col items-center justify-center
-           bg-black text-white"
+		class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black text-white"
 	>
-		<div class="text-6xl mb-6">↻</div>
+		<div class="mb-6 text-6xl">↻</div>
 
 		<h1 class="text-2xl font-bold">Rotate your device</h1>
 
-		<p class="mt-2 text-center text-white/60">Please rotate your phone to landscape.</p>
+		<p class="mt-2 text-center text-white/60">
+			Please rotate your phone to landscape.
+		</p>
 
 		<button
+			type="button"
 			onclick={goFullscreen}
-			class="mt-8 rounded-xl bg-white px-6 py-3
-             font-semibold text-black"
+			class="mt-8 rounded-xl bg-white px-6 py-3 font-semibold text-black"
 		>
 			Continue
 		</button>
 	</div>
 {:else}
-	<div class="h-dvh w-screen overflow-hidden">
+	<div class="h-dvh w-screen overflow-auto">
 		{@render children()}
 	</div>
 {/if}
-
-<style>
-	@import 'tailwindcss';
-</style>
