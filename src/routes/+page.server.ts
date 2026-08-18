@@ -16,14 +16,14 @@ export const actions: Actions = {
 			if (!password) {
 				return fail(400, {
 					error: 'Password is required.',
-					success: false
+					success: false,
 				});
 			}
 
 			if (!/^\d+$/.test(password)) {
 				return fail(400, {
 					error: 'Password must contain numbers only.',
-					success: false
+					success: false,
 				});
 			}
 
@@ -31,7 +31,7 @@ export const actions: Actions = {
 			if (password !== FORM_PASSWORD) {
 				return fail(401, {
 					error: 'Incorrect password.',
-					success: false
+					success: false,
 				});
 			}
 
@@ -39,7 +39,7 @@ export const actions: Actions = {
 			if (!name) {
 				return fail(400, {
 					error: 'Name is required.',
-					success: false
+					success: false,
 				});
 			}
 
@@ -47,7 +47,7 @@ export const actions: Actions = {
 			if (!path) {
 				return fail(400, {
 					error: 'Signature is required.',
-					success: false
+					success: false,
 				});
 			}
 
@@ -59,14 +59,14 @@ export const actions: Actions = {
 			} catch {
 				return fail(400, {
 					error: 'Invalid signature data.',
-					success: false
+					success: false,
 				});
 			}
 
 			if (!Array.isArray(strokes) || strokes.length === 0) {
 				return fail(400, {
 					error: 'Signature is required.',
-					success: false
+					success: false,
 				});
 			}
 
@@ -75,19 +75,19 @@ export const actions: Actions = {
 			await Image.create({
 				name,
 				image: path,
-				createdAt: new Date()
+				createdAt: new Date(),
 			});
 
 			return {
-				success: true
+				success: true,
 			};
 		} catch (error) {
 			console.error('Failed to save signature:', error);
 
 			return fail(500, {
 				error: 'Failed to save signature.',
-				success: false
+				success: false,
 			});
 		}
-	}
+	},
 };
