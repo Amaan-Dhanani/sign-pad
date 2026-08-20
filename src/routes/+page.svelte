@@ -271,55 +271,54 @@
 
 <!-- Password modal -->
 {#if showPasswordModal}
-	<div
-		class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
-		role="presentation"
-		onclick={(event) => {
-			if (event.target === event.currentTarget) {
-				cancelPassword();
-			}
-		}}
-	>
-		<div role="dialog" aria-modal="true" aria-labelledby="password-title" class="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
-			<h2 id="password-title" class="text-lg font-semibold text-gray-900">Enter Password</h2>
+    <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="password-title" class="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
+            <h2 id="password-title" class="text-lg font-semibold text-gray-900">Enter Password</h2>
 
-			<p class="mt-1 text-sm text-gray-500">Enter your PIN to save this signature.</p>
+            <p class="mt-1 text-sm text-gray-500">Enter your PIN to save this signature.</p>
 
-			<div class="mt-4">
-				<label for="password" class="mb-1 block text-sm font-medium text-gray-700"> PIN </label>
+            <!-- Wrap input and actions in a form -->
+            <form 
+                onsubmit={(e) => {
+                    e.preventDefault();
+                    confirmSubmit();
+                }}
+                class="mt-4"
+            >
+                <label for="password" class="mb-1 block text-sm font-medium text-gray-700"> PIN </label>
 
-				<input
-					bind:this={passwordInput}
-					id="password"
-					type="password"
-					inputmode="numeric"
-					pattern="[0-9]*"
-					autocomplete="off"
-					bind:value={password}
-					class="w-full rounded border border-gray-300 px-3 py-3 text-center text-xl tracking-[0.4em] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-					placeholder="••••••"
-				/>
-			</div>
+                <input
+                    bind:this={passwordInput}
+                    id="password"
+                    type="password"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    autocomplete="off"
+                    bind:value={password}
+                    class="w-full rounded border border-gray-300 px-3 py-3 text-center text-xl tracking-[0.4em] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="••••••"
+                />
 
-			<div class="mt-6 flex justify-end gap-2">
-				<button
-					type="button"
-					onclick={cancelPassword}
-					disabled={submitting}
-					class="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-				>
-					Cancel
-				</button>
+                <div class="mt-6 flex justify-end gap-2">
+                    <button
+                        type="button"
+                        onclick={cancelPassword}
+                        disabled={submitting}
+                        class="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                        Cancel
+                    </button>
 
-				<button
-					type="button"
-					onclick={confirmSubmit}
-					disabled={!password || submitting}
-					class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{submitting ? 'Saving...' : 'Confirm'}
-				</button>
-			</div>
-		</div>
-	</div>
+                    <!-- Make this type="submit" so Enter/Go triggers form submission -->
+                    <button
+                        type="submit"
+                        disabled={!password || submitting}
+                        class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {submitting ? 'Saving...' : 'Confirm'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 {/if}
